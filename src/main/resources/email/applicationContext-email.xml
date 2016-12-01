@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd"
+	default-lazy-init="true">
+
+	<description>Email配置</description>
+
+	<!-- 文本邮件服务类 -->
+	<bean id="simpleMailServiceImpl"
+		class="com.fosun.fc.projects.creepers.service.impl.SimpleMailServiceImpl">
+		<property name="mailSender" ref="mailSender" />
+		<property name="textTemplate">
+			<value><![CDATA[
+			以上信息统计截止%tF.
+			]]></value>
+		</property>
+	</bean>
+
+	<!-- MIME邮件服务类 -->
+	<!-- <bean id="mimeMailService"
+		class="com.fosun.fc.projects.creepers.service.impl.MimeMailServiceImpl">
+		<property name="mailSender" ref="mailSender" />
+		<property name="freemarkerConfiguration" ref="freemarkerConfiguration" />
+	</bean> -->
+
+	<!-- 用于生成HTML邮件内容的Freemarker配置 -->
+	<bean id="freemarkerConfiguration"
+		class="org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean">
+		<property name="templateLoaderPath" value="classpath:/email" />
+	</bean>
+	<context:property-placeholder
+		ignore-unresolvable="true" location="classpath*:/application.properties" />
+	<!-- 邮件发送器 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${mail.host}" />
+		<property name="username" value="${mail.username}" />
+		<property name="password" value="${mail.password}" />
+		<property name="defaultEncoding" value="UTF-8" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<!-- 使用gmail smtp server的必须参数 -->
+				<!-- <prop key="mail.smtp.starttls.enable">true</prop> -->
+			</props>
+		</property>
+	</bean>
+</beans>

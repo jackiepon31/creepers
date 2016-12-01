@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd"
+	default-lazy-init="true">
+
+	  <description>使用Spring的 Scheduled的定时任务配置</description>
+	  
+	  <!-- 初始化所有批处理任务 -->
+	   
+	  
+	  <!-- 爬取限制发行企业债黑名单 -->
+	  <!-- <bean name="creepersCropBonds" class="com.fosun.fc.projects.creepers.service.impl.CreepersJobServiceImpl"/>
+	  <bean id="executeCropBonds" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	    <property name="targetObject" ref="creepersCropBonds" />
+	    <property name="targetMethod" value="getTaskList" />
+	    <property name="concurrent" value="false" /> 
+	  </bean>
+	  <bean id="executeCropBondsTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+	    <property name="jobDetail" ref="executeCropBonds" />
+	     <property name="cronExpression" value="* 0/5 * * * ?" />
+	  </bean> -->
+	  <bean id="jobFactory" class="com.fosun.fc.projects.creepers.schedule.JobFactory"></bean>
+	  <!-- 同步任务列表 -->
+	  <bean id="creepersScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	      <property name="jobFactory" ref="jobFactory"></property>
+	      <property name="triggers">
+	         <list>
+	         	<!--爬取限制发行企业债黑名单定时任务  -->
+	            <!-- <ref bean="executeCropBondsTrigger"/> -->
+	         	<!--爬取最高法失信人黑名单定时任务  -->
+	           <!--  <ref bean="executeCropBondsTrigger"/>  -->
+	        </list>
+	      </property>
+	      <property name="quartzProperties">
+	      <props>
+	        <prop key="org.quartz.threadPool.threadCount">10</prop>
+	        <prop key="org.quartz.threadPool.threadPriority">5</prop>
+	        <prop key="org.quartz.threadPool.class">org.quartz.simpl.SimpleThreadPool</prop> 
+	      </props>
+	     </property>
+	 </bean>
+</beans>

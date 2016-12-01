@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:redis="http://www.springframework.org/schema/redis"
+   xmlns:context="http://www.springframework.org/schema/context"
+   xmlns:p="http://www.springframework.org/schema/p"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+   http://www.springframework.org/schema/redis http://www.springframework.org/schema/redis/spring-redis.xsd
+   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+   default-lazy-init="true">
+   
+	<description>redis 发布 定阅</description>
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxTotal" value="${redis.maxTotal}" />
+		<property name="maxIdle" value="${redis.maxIdle}" />
+		<property name="minIdle" value="${redis.minIdle}" />
+		<property name="maxWaitMillis" value="${redis.maxWaitMillis}" />
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+	</bean>
+	<bean id="jedisConnectionFactory"
+		class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="hostName" value="${redis.ip}" />
+		<property name="port" value="${redis.port}" />
+		<property name="timeout" value="${redis.timeout}" />
+		<property name="poolConfig" ref="jedisPoolConfig" />
+ 		<property name="password" value="${redis.password}" />
+	</bean>
+	 <bean id="stringRedisSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+	    <property name="connectionFactory" ref="jedisConnectionFactory" />
+	    <property name="keySerializer" ref="stringRedisSerializer" />
+	    <property name="hashKeySerializer" ref="stringRedisSerializer" />
+    </bean>
+    <bean id="redisCacheTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+	    <property name="connectionFactory" ref="jedisConnectionFactory" />
+	    <property name="keySerializer" ref="stringRedisSerializer" />
+	    <property name="hashKeySerializer" ref="stringRedisSerializer" />
+    </bean>
+	<bean id="tradeMarkListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.TradeMarkSubServiceImpl" />
+	<bean id="judgementListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.JudgementSubServiceImpl" />
+	<bean id="courtAnnounceListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.CourtAnnounceSubServiceImpl" />
+	<bean id="patentListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.PatentSubServiceImpl" />
+	<bean id="shixinListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.ShixinSubServiceImpl" />
+	<bean id="proxyMimvpListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.ProxyMimvpSubServiceImpl" />
+	<bean id="fundListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.FundSubServiceImpl" />
+	<bean id="insuranceListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.InsuranceSubServiceImpl" />
+	<bean id="creditReferenceListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.CreditReferenceSubServiceImpl" />
+	<bean id="touristGuideListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.TouristGuideSubServiceImpl" />
+	<bean id="touristBlackListListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.TouristBlackListSubServiceImpl" />
+	<bean id="courtCorpBondsListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.CourtCorpBondsSubServiceImpl" />
+	<bean id="courtDishonestyListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.CourtDishonestySubServiceImpl" />
+	<bean id="sactionListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.SactionSubServiceImpl" />
+	<bean id="shixinAllListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.ShixinAllSubServiceImpl" />
+	<bean id="taxEvasionListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.TaxEvasionSubServiceImpl" />
+	<bean id="MedicalListener" class="com.fosun.fc.projects.creepers.redis.service.Impl.MedicalSubServiceImpl" />
+	<redis:listener-container connection-factory="jedisConnectionFactory">
+		<!-- topic代表监听的通道，是一个正规匹配 -->
+		<redis:listener ref="tradeMarkListener" method="handleMessage" topic="trade_mark_list" />
+		<redis:listener ref="judgementListener" method="handleMessage" topic="judgement_list" />
+		<redis:listener ref="courtAnnounceListener" method="handleMessage" topic="court_announce_list" />
+		<redis:listener ref="patentListener" method="handleMessage" topic="patent_list" />
+		<redis:listener ref="shixinListener" method="handleMessage" topic="shi_xin_list" />
+		<redis:listener ref="proxyMimvpListener" method="handleMessage" topic="proxy_ip_list" />
+		<redis:listener ref="fundListener" method="handleMessage" topic="fund_list" />
+		<redis:listener ref="insuranceListener" method="handleMessage" topic="insurance_list" />
+		<redis:listener ref="creditReferenceListener" method="handleMessage" topic="credit_reference_list" />
+		<redis:listener ref="touristGuideListener" method="handleMessage" topic="tour_guide_list" />
+		<redis:listener ref="touristBlackListListener" method="handleMessage" topic="tour_black_list" />
+		<redis:listener ref="courtCorpBondsListener" method="handleMessage" topic="court_corp_bonds_list" />
+		<redis:listener ref="courtDishonestyListener" method="handleMessage" topic="court_dishonesty_list" />
+		<redis:listener ref="sactionListener" method="handleMessage" topic="saction_list" />
+		<redis:listener ref="shixinAllListener" method="handleMessage" topic="shi_xin_all_list" />
+		<redis:listener ref="taxEvasionListener" method="handleMessage" topic="tax_evasion_list" />
+		<redis:listener ref="MedicalListener" method="handleMessage" topic="medical_group" />
+	</redis:listener-container>
+</beans>

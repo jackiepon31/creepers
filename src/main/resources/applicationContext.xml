@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:jdbc="http://www.springframework.org/schema/jdbc"  
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd"    
+	default-lazy-init="true">
+
+	<description>Spring公共配置 </description>
+	<context:component-scan base-package="com.fosun.fc.projects.creepers">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+	<bean id="stringHttpMessageConverter"  class="org.springframework.http.converter.StringHttpMessageConverter"> 
+        <constructor-arg value="UTF-8" index="0"></constructor-arg>
+        <property name="supportedMediaTypes">  
+            <list>  
+                <value>text/plain;charset=UTF-8</value>  
+            </list>  
+        </property>  
+    </bean>
+    
+    <bean id="fastJsonHttpMessageConverter"  class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">  
+        <property name="supportedMediaTypes">  
+            <list>  
+                <value>application/json;charset=UTF-8</value>  
+                <value>text/html;charset=UTF-8</value>  
+            </list>  
+        </property>  
+        <property name="features">  
+            <util:list>  
+                <value>QuoteFieldNames</value>  
+                <value>WriteDateUseDateFormat</value>  
+            </util:list>  
+        </property>  
+    </bean>  
+      
+    <bean id="marshallingHttpMessageConverter"  
+        class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">  
+        <property name="marshaller" ref="castorMarshaller" />  
+        <property name="unmarshaller" ref="castorMarshaller" />  
+        <property name="supportedMediaTypes">  
+            <list>  
+                <value>text/xml;charset=UTF-8</value>  
+                <value>application/xml;charset=UTF-8</value>  
+            </list>  
+        </property>  
+    </bean>
+    
+    <bean id="castorMarshaller" class="org.springframework.oxm.castor.CastorMarshaller" />
+    
+    <bean id="requestFactory" class="org.springframework.http.client.SimpleClientHttpRequestFactory">
+        <property name="readTimeout" value="10000"/>
+        <property name="connectTimeout" value="5000"/>
+    </bean>
+ 
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+        <constructor-arg ref="requestFactory"/>
+ 		<property name="messageConverters">
+           <util:list id="messageConverters">  
+		        <ref bean="stringHttpMessageConverter" />  
+		        <ref bean="fastJsonHttpMessageConverter" />  
+		        <ref bean="marshallingHttpMessageConverter" />  
+		    </util:list>  
+		</property>
+    </bean>
+ 
+    <bean name="openEntityManagerInViewInterceptor"   class="org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor"> 
+        <property name="entityManagerFactory">  
+        	<ref bean="entityManagerFactory" />  
+        </property>  
+    </bean>  
+    
+    <bean  class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+	    <property name="interceptors">  
+	        <list>  
+	            <ref bean="openEntityManagerInViewInterceptor" />  
+	        </list>  
+	    </property>   
+	</bean>  
+	
+	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"> 
+		<property name="dataSource" ref="dataSource"/>
+		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+		<property name="packagesToScan">
+			<array>
+              	<value>com.fosun.fc.modules.entity</value>
+              	<value>com.fosun.fc.projects.creepers.entity</value>
+        	</array>
+		</property>
+		<property name="jpaProperties">
+			<props>
+                <prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+                <prop key="hibernate.cache.provider_class">org.hibernate.cache.NoCacheProvider</prop>
+                <prop key="hibernate.show_sql">true</prop>  
+                <prop key="hibernate.format_sql">true</prop>
+            </props>
+		</property>
+	</bean>
+	
+	<bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+		<property name="databasePlatform">
+			<bean factory-method="getDialect" class="com.fosun.fc.modules.persistence.Hibernates">
+				<constructor-arg ref="dataSource"/>
+			</bean>
+		</property>
+	</bean>
+	
+ 	<jpa:repositories base-package="com.fosun.fc.projects.creepers"  
+ 	transaction-manager-ref="transactionManager" entity-manager-factory-ref="entityManagerFactory"/>
+   
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+
+ 	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+	
+	<context:property-placeholder ignore-unresolvable="true" location="classpath*:/application.properties" />   
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="maxActive" value="${jdbc.pool.maxActive}" />
+		<property name="maxIdle" value="${jdbc.pool.maxIdle}" />
+		<property name="minIdle" value="0" />
+		<property name="defaultAutoCommit" value="false" />
+	</bean>
+	
+	<bean id="propertiesReader" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+		    <list>
+		    	<value>classpath:application.properties</value>
+		    	<value>classpath:log4jdbc.properties</value>
+		    	<value>classpath:mongodb.properties</value>
+		   	</list>
+		</property>
+	</bean>
+	
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="properties" ref="propertiesReader"/>
+<!--  		<property name="location"> -->
+<!-- 		    <value>classpath:application.properties</value> -->
+<!--         </property> -->
+    </bean>
+
+<!-- <context:property-placeholder location="classpath:application.properties"/> -->
+</beans>
